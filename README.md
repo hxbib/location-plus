@@ -4,9 +4,9 @@
 
 Plug your iPhone in via USB, open your browser, drop a pin, and your iPhone reports that coordinate to every app on the device until you stop. Works on iOS 16 over USB and on iOS 17+ over Apple's CoreDevice tunnel (`tunneld`). Everything runs on your own machine — no accounts, no cloud, nothing.
 
-Python
-FastAPI
-Platform
+![Python](https://img.shields.io/badge/Python-3.13+-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green)
+![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey)
 
 ---
 
