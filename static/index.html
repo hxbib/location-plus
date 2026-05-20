@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Location+</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+:root, [data-theme="dark"] {
+  --bg-primary: #08070f;
+  --bg-secondary: #0e0d18;
+  --bg-tertiary: #161523;
+  --bg-elevated: #1e1c2e;
+  --border: #252340;
+  --border-active: #3d3860;
+  --text-primary: #eae7f5;
+  --text-secondary: #9590b0;
+  --text-dim: #5a5478;
+  --accent: #e8b86d;
+  --accent-dim: rgba(232,184,109,0.12);
+  --accent-glow: rgba(232,184,109,0.30);
+  --danger: #ff6b85;
+  --danger-dim: rgba(255,107,133,0.12);
+  --warning: #ffb833;
+  --warning-dim: rgba(255,184,51,0.12);
+  --ios-blue: #70b0ff;
+  --pink: #d4a0c4;
+  --blue-soft: #90bce0;
+  --logo-gradient: linear-gradient(135deg, #e8b86d, #d4a0c4);
+  --pin-color: #e8b86d;
+  --pin-border: #08070f;
+  --pin-glow: rgba(232,184,109,0.45);
+  --pin-glow-spread: rgba(232,184,109,0.18);
+  --tile-style: dark_all;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --shadow-lg: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+  --shadow-glow: 0 0 40px var(--accent-dim), 0 0 80px rgba(232,184,109,0.06);
+  --status-active-bg: rgba(232,184,109,0.10);
+  --status-active-border: rgba(232,184,109,0.25);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f5f0f7;
+  --bg-secondary: #fefefe;
+  --bg-tertiary: #ece6f2;
+  --bg-elevated: #e2daea;
+  --border: #d0c6dc;
+  --border-active: #b09cc8;
+  --text-primary: #221e30;
+  --text-secondary: #5e5478;
+  --text-dim: #8e84a8;
+  --accent: #6aab7a;
+  --accent-dim: rgba(106,171,122,0.12);
+  --accent-glow: rgba(106,171,122,0.30);
+  --danger: #e04868;
+  --danger-dim: rgba(224,72,104,0.10);
+  --warning: #c48a20;
+  --warning-dim: rgba(196,138,32,0.10);
+  --ios-blue: #6a9fd0;
+  --pink: #e8b0c8;
+  --blue-soft: #a8ccec;
+  --logo-gradient: linear-gradient(135deg, #b09cc8, #6a9fd0);
+  --pin-color: #6aab7a;
+  --pin-border: #fefefe;
+  --pin-glow: rgba(106,171,122,0.45);
+  --pin-glow-spread: rgba(106,171,122,0.18);
+  --tile-style: light_all;
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.06), 0 0 0 1px var(--border);
+  --shadow-glow: 0 0 30px var(--accent-dim);
+  --status-active-bg: rgba(106,171,122,0.10);
+  --status-active-border: rgba(106,171,122,0.25);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-display);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s, color 0.3s;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--logo-gradient);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 16px var(--accent-dim);
+}
+
+.logo h1 {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.logo h1 { background: var(--logo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.version-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+  align-self: center;
+}
+
+.theme-toggle {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+.sidebar-header p {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tunneld-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding: 7px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.tunneld-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.tunneld-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  flex-shrink: 0;
+}
+
+.tunneld-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.tunneld-btns { display: flex; gap: 4px; }
+
+.tunneld-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tunneld-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.sidebar-body::-webkit-scrollbar { width: 4px; }
+.sidebar-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+}
+
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-row .section-title { margin-bottom: 0; }
+
+.saved-locs {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.saved-locs::-webkit-scrollbar { width: 3px; }
+.saved-locs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.saved-loc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+}
+
+.saved-loc-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.saved-loc-item .loc-name {
+  flex: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.saved-loc-item .loc-coords {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.saved-loc-item .delete-loc {
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.2s, opacity 0.2s;
+  flex-shrink: 0;
+  opacity: 0.35;
+}
+
+.saved-loc-item:hover .delete-loc { opacity: 1; }
+.saved-loc-item .delete-loc:hover { color: var(--danger); }
+
+.saved-loc-item .loc-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.save-loc-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.save-loc-row input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 7px 10px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.save-loc-row input:focus { border-color: var(--accent); }
+.save-loc-row input::placeholder { color: var(--text-dim); }
+
+.save-loc-row button {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 7px 12px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.save-loc-row button:hover {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.device-card {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.device-card:hover {
+  border-color: var(--border-active);
+  background: var(--bg-elevated);
+}
+
+.device-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 0 20px var(--accent-dim);
+}
+
+.device-card.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+}
+
+.device-card.active-session {
+  border-color: var(--accent);
+}
+
+.device-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.device-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-xs);
+  background: rgba(110,170,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.device-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.device-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  margin-left: 40px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.device-badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.badge-ios { background: rgba(110,170,255,0.12); color: var(--ios-blue); }
+.badge-conn { background: var(--bg-primary); color: var(--text-secondary); }
+.badge-wifi { color: var(--ios-blue); border-color: var(--ios-blue); }
+
+.device-session-info {
+  margin-top: 8px;
+  margin-left: 40px;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.session-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+.session-stat-row .val { color: var(--accent); font-weight: 600; }
+.session-stat-row .val.warn { color: var(--warning); }
+.session-stat-row .val.err { color: var(--danger); }
+
+.device-session-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  margin-left: 40px;
+}
+
+.dev-btn {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dev-btn:hover { border-color: var(--accent); color: var(--accent); }
+.dev-btn.danger { border-color: var(--danger); color: var(--danger); }
+.dev-btn.danger:hover { background: var(--danger); color: white; }
+
+.reconnecting-badge {
+  display: inline-block;
+  background: var(--warning-dim);
+  color: var(--warning);
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 2px 8px;
+  border-radius: 4px;
+  animation: pulse 2s infinite;
+}
+
+.no-devices {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.no-devices p { margin-bottom: 6px; }
+
+.refresh-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+.refresh-btn.spinning svg { animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.coord-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.coord-field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+  font-family: var(--font-mono);
+}
+
+.coord-field input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 9px 10px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.coord-field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.coord-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.coord-action-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.coord-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.search-box { margin-bottom: 10px; }
+
+.search-input-wrap { position: relative; }
+
+.search-input-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.search-input-wrap input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px 10px 36px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.search-input-wrap input::placeholder { color: var(--text-dim); }
+
+.search-results {
+  margin-top: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: none;
+}
+
+.search-results.visible { display: block; }
+
+.search-result-item {
+  padding: 9px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--accent-dim); }
+.search-result-item .name { font-weight: 600; margin-bottom: 2px; }
+.search-result-item .address { color: var(--text-dim); font-size: 11px; }
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.settings-row:last-child { margin-bottom: 0; }
+
+.settings-row label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.settings-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings-row .range-value {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-header .section-title { margin-bottom: 0; }
+
+.section-collapse {
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-collapse .arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 9px;
+  margin-left: 6px;
+}
+
+.section-collapse.collapsed .arrow { transform: rotate(-90deg); }
+
+.clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.history-list::-webkit-scrollbar { width: 3px; }
+.history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 11px;
+}
+
+.history-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.history-item .hist-icon {
+  font-size: 12px;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.history-item .hist-body { flex: 1; min-width: 0; }
+
+.history-item .hist-coords {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.history-item .hist-meta {
+  color: var(--text-dim);
+  font-size: 10px;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.actions {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+.btn-set {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.btn-set:hover:not(:disabled) {
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.btn-set:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-stop {
+  background: var(--danger-dim);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-stop:hover { background: var(--danger); color: white; }
+.btn-stop.hidden { display: none; }
+
+.status-bar {
+  padding: 8px 14px;
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  transition: background 0.3s, border-color 0.3s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.status-bar.active {
+  background: var(--status-active-bg, var(--bg-tertiary));
+  border-top-color: var(--status-active-border, var(--border));
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.status-left span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: all 0.3s;
+}
+
+.status-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-dim);
+  animation: pulse 2s infinite;
+}
+
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ws-indicator {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--danger);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.ws-indicator.connected { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+.ws-indicator.stale { background: var(--warning); animation: pulse 1.2s infinite; }
+
+.offline-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-60px);
+  z-index: 10000;
+  background: var(--danger);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.offline-banner.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.leaflet-control-zoom { border: 1px solid var(--border) !important; border-radius: var(--radius-sm) !important; overflow: hidden; }
+.leaflet-control-zoom a { background: var(--bg-secondary) !important; color: var(--text-primary) !important; border: none !important; border-bottom: 1px solid var(--border) !important; width: 34px !important; height: 34px !important; line-height: 34px !important; font-size: 16px !important; }
+.leaflet-control-zoom a:last-child { border-bottom: none !important; }
+.leaflet-control-zoom a:hover { background: var(--bg-elevated) !important; }
+
+.map-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 800;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
+
+.map-container:hover .map-crosshair { opacity: 0.6; }
+
+.map-coords-overlay {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 800;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+
+.map-coords-overlay span { color: var(--accent); font-weight: 600; }
+
+.active-pin-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 800;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-glow);
+  animation: slideIn 0.3s ease;
+}
+
+.active-pin-overlay.visible { display: flex; }
+
+@keyframes slideIn {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.ctx-menu {
+  position: fixed;
+  z-index: 9999;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 0;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  min-width: 180px;
+}
+
+.ctx-menu.visible { display: block; }
+
+.ctx-menu-item {
+  padding: 8px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.ctx-menu-item:hover { background: var(--accent-dim); }
+
+.ctx-menu-item .shortcut {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.toast {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 3s forwards;
+  min-width: 240px;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast.success { border-color: var(--accent); }
+.toast.error { border-color: var(--danger); }
+.toast.warning { border-color: var(--warning); }
+
+@keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+.resume-banner {
+  display: none;
+  padding: 10px 20px;
+  background: var(--accent-dim);
+  border-bottom: 1px solid var(--accent);
+  font-size: 12px;
+  color: var(--accent);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.resume-banner.visible { display: flex; }
+
+.resume-banner-btns { display: flex; gap: 6px; }
+
+.resume-banner button {
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.resume-btn-go { background: var(--accent); color: var(--bg-primary); }
+.resume-btn-dismiss { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border) !important; }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 1fr 400px; }
+  .sidebar { order: 2; border-right: none; border-top: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-row">
+        <div class="logo">
+          <div class="logo-icon">&#x1F4CD;</div>
+          <h1>Location</h1>
+          <span class="version-badge">v05.23.25</span>
+        </div>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">&#x1F319;</button>
+      </div>
+      <div class="tunneld-bar">
+        <div class="tunneld-status">
+          <div class="tunneld-dot" id="tunneldDot"></div>
+          <span id="tunneldLabel">Tunnel: Checking...</span>
+        </div>
+        <div class="tunneld-btns">
+          <button class="tunneld-btn" id="tunneldToggle" onclick="toggleTunneld()">Start</button>
+          <button class="tunneld-btn" id="tunneldLaunchBtn" onclick="launchTunnelTerminal()" title="Open in Terminal.app" style="display:none">Terminal</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="resume-banner" id="resumeBanner">
+      <span id="resumeText">Previous session was active</span>
+      <div class="resume-banner-btns">
+        <button class="resume-btn-go" onclick="resumeSession()">Resume</button>
+        <button class="resume-btn-dismiss" onclick="dismissResume()">Dismiss</button>
+      </div>
+    </div>
+
+    <div class="sidebar-body">
+
+      <div class="section">
+        <div class="section-title">Saved Locations</div>
+        <div class="saved-locs" id="savedLocs"></div>
+        <div class="save-loc-row">
+          <input type="text" id="saveLocName" placeholder="Name this location..." />
+          <button onclick="saveCurrentLocation()">Save</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-row">
+          <div class="section-title">Devices</div>
+          <button class="refresh-btn" onclick="manualRefreshDevices()" id="refreshBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+            Scan
+          </button>
+        </div>
+        <div class="device-list" id="deviceList">
+          <div class="no-devices" id="noDevices">
+            <p>No devices detected</p>
+            <p style="font-size:11px;">Connect iPhone via USB</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Target Location</div>
+        <div class="search-box">
+          <div class="search-input-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="searchInput" placeholder="Search for a place..." autocomplete="off" />
+          </div>
+          <div class="search-results" id="searchResults"></div>
+        </div>
+        <div class="coord-display">
+          <div class="coord-field">
+            <label>Latitude</label>
+            <input type="text" id="latInput" placeholder="40.7128" />
+          </div>
+          <div class="coord-field">
+            <label>Longitude</label>
+            <input type="text" id="lngInput" placeholder="-74.0060" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Settings</div>
+        <div class="settings-row">
+          <label>Hold Interval</label>
+          <input type="range" id="holdIntervalSlider" min="0.5" max="10" step="0.5" value="1" />
+          <span class="range-value" id="holdIntervalValue">1.0s</span>
+        </div>
+        <div class="settings-row">
+          <label>Reconnect</label>
+          <input type="range" id="reconnectSlider" min="30" max="1800" step="30" value="1800" />
+          <span class="range-value" id="reconnectValue">30m</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title section-collapse collapsed" id="historyToggle" onclick="toggleHistory()">
+            History <span class="arrow">&#9660;</span>
+          </div>
+          <button class="clear-btn" onclick="clearHistory()">Clear</button>
+        </div>
+        <div id="historyContainer" style="display:none">
+          <div class="history-list" id="historyList">
+            <div class="history-empty">No history yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary btn-set" id="btnSet" disabled onclick="setLocation()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        Set Device Location
+      </button>
+      <button class="btn-primary btn-stop hidden" id="btnStopAll" onclick="stopAll()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        Stop All &amp; Restore GPS
+      </button>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-left">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Ready</span>
+      </div>
+      <div class="status-right">
+        <div class="ws-indicator" id="wsIndicator" title="WebSocket"></div>
+        <span>made with luv by habib for ishtat &#x2764;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-container">
+    <div id="map"></div>
+
+    <svg class="map-crosshair" width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="var(--accent)" stroke-width="1.5">
+      <circle cx="16" cy="16" r="6" stroke-dasharray="3 3"/>
+      <line x1="16" y1="2" x2="16" y2="10"/>
+      <line x1="16" y1="22" x2="16" y2="30"/>
+      <line x1="2" y1="16" x2="10" y2="16"/>
+      <line x1="22" y1="16" x2="30" y2="16"/>
+    </svg>
+
+    <div class="map-coords-overlay" id="coordsOverlay">
+      <span id="cursorLat">&mdash;</span>, <span id="cursorLng">&mdash;</span>
+    </div>
+
+    <div class="active-pin-overlay" id="activePinOverlay">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span id="activePinText">Location active</span>
+    </div>
+  </div>
+</div>
+
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-menu-item" onclick="ctxSetHere()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+    Pin location here
+    <span class="shortcut">Click</span>
+  </div>
+  <div class="ctx-menu-item" onclick="ctxSaveHere()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    Save this location
+  </div>
+  <div class="ctx-menu-item" onclick="ctxCopyCoords()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    Copy coordinates
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="offline-banner" id="offlineOverlay">Offline &mdash; waiting for network</div>
+
+<script>
+
+let selectedDevices = new Set();
+let allDevices = [];
+let pinMarker = null;
+let pinLat = null;
+let pinLng = null;
+let activeSessions = {};
+let ws = null;
+let wsConnected = false;
+let wsLastMessageAt = 0;
+let wsReconnectAttempts = 0;
+let wsReconnectTimer = null;
+let wsHeartbeatTimer = null;
+let wsServerHeardAt = 0;
+let autoRefreshTimer = null;
+let ctxLatLng = null;
+let historyCollapsed = true;
+let _refreshCooldown = false;
+let _previousSessionData = null;
+let tileLayer = null;
+let isOnline = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? navigator.onLine : true;
+let _lastWakeTick = Date.now();
+let _offlineToastShown = false;
+
+async function request(url, options) {
+  options = options || {};
+  const timeout = options.timeout != null ? options.timeout : 8000;
+  const retries = options.retries != null ? options.retries : 0;
+  const backoffBase = options.backoffBase || 400;
+  const {timeout: _t, retries: _r, backoffBase: _b, allowOffline, ...init} = options;
+
+  if (!allowOffline && !isOnline && /^https?:/.test(url)) {
+
+    try {
+      const u = new URL(url);
+      if (u.origin !== location.origin) throw new Error('offline');
+    } catch (e) {  }
+  }
+
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeout);
+    try {
+      const res = await fetch(url, Object.assign({}, init, { signal: ctrl.signal }));
+      clearTimeout(timer);
+      return res;
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = e;
+      if (attempt < retries) {
+        const delay = backoffBase * Math.pow(2, attempt) + Math.random() * 150;
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr || new Error('network error');
+}
+
+async function apiGet(path, opts) {
+  opts = opts || {};
+  const res = await request(path, {
+    timeout: opts.timeout || 6000,
+    retries: opts.retries != null ? opts.retries : 2,
+    allowOffline: true,
+  });
+  return res;
+}
+
+async function apiPost(path, body, opts) {
+  opts = opts || {};
+  const res = await request(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+    timeout: opts.timeout || 12000,
+    retries: opts.retries != null ? opts.retries : 0,
+    allowOffline: true,
+  });
+  return res;
+}
+
+function getTheme() {
+  return localStorage.getItem('locationplus-theme') || 'dark';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggle');
+  btn.textContent = theme === 'dark' ? '\u{1F319}' : '\u{2600}\u{FE0F}';
+  localStorage.setItem('locationplus-theme', theme);
+  updateMapTiles(theme);
+  updatePinIcons();
+}
+
+function toggleTheme() {
+  const current = getTheme();
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function updateMapTiles(theme) {
+  if (!tileLayer) return;
+  const style = theme === 'light' ? 'light_all' : 'dark_all';
+  tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/' + style + '/{z}/{x}/{y}{r}.png');
+}
+
+function getPinHtml(active) {
+  const style = getComputedStyle(document.documentElement);
+  const color = style.getPropertyValue('--pin-color').trim();
+  const border = style.getPropertyValue('--pin-border').trim();
+  const glow = style.getPropertyValue('--pin-glow').trim();
+  const spread = style.getPropertyValue('--pin-glow-spread').trim();
+  const size = active ? 32 : 28;
+  const shadow = active
+    ? 'box-shadow:0 4px 20px ' + glow + ',0 0 60px ' + spread + ';animation:markerPulse 2s infinite;'
+    : 'box-shadow:0 4px 16px ' + glow + ',0 0 40px ' + spread + ';';
+  return '<div style="width:' + size + 'px;height:' + size + 'px;background:' + color + ';border:3px solid ' + border + ';border-radius:50% 50% 50% 0;transform:rotate(-45deg);' + shadow + '"></div>'
+    + (active ? '<style>@keyframes markerPulse{0%,100%{opacity:1}50%{opacity:0.7}}</style>' : '');
+}
+
+function makePinIcon(active) {
+  const size = active ? 32 : 28;
+  return L.divIcon({
+    className: active ? 'active-pin' : 'custom-pin',
+    html: getPinHtml(active),
+    iconSize: [size, size],
+    iconAnchor: [size/2, size],
+  });
+}
+
+function updatePinIcons() {
+  if (!pinMarker) return;
+  const hasActive = Object.keys(activeSessions).length > 0;
+  pinMarker.setIcon(makePinIcon(hasActive));
+}
+
+applyTheme(getTheme());
+
+let swReady = null;
+if ('serviceWorker' in navigator) {
+  swReady = navigator.serviceWorker.register('/static/sw.js').then(reg => {
+    console.log('SW registered');
+    return navigator.serviceWorker.ready;
+  }).catch(e => console.warn('SW registration failed:', e));
+}
+
+const map = L.map('map', {
+  center: [40.7128, -74.0060],
+  zoom: 13,
+  zoomControl: false,
+  attributionControl: false,
+});
+
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+const tileStyle = getTheme() === 'light' ? 'light_all' : 'dark_all';
+tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/' + tileStyle + '/{z}/{x}/{y}{r}.png', {
+  maxZoom: 20,
+  subdomains: 'abcd',
+}).addTo(map);
+
+map.on('click', (e) => placePin(e.latlng.lat, e.latlng.lng));
+
+map.on('mousemove', (e) => {
+  document.getElementById('cursorLat').textContent = e.latlng.lat.toFixed(6);
+  document.getElementById('cursorLng').textContent = e.latlng.lng.toFixed(6);
+});
+
+map.on('contextmenu', (e) => {
+  e.originalEvent.preventDefault();
+  ctxLatLng = e.latlng;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.left = e.originalEvent.pageX + 'px';
+  menu.style.top = e.originalEvent.pageY + 'px';
+  menu.classList.add('visible');
+});
+
+document.addEventListener('click', () => {
+  document.getElementById('ctxMenu').classList.remove('visible');
+});
+
+function ctxSetHere() { if (ctxLatLng) placePin(ctxLatLng.lat, ctxLatLng.lng); }
+
+function ctxSaveHere() {
+  if (ctxLatLng) {
+    placePin(ctxLatLng.lat, ctxLatLng.lng);
+    const name = prompt('Name for this location:');
+    if (name) saveLocation(name, ctxLatLng.lat, ctxLatLng.lng);
+  }
+}
+
+function ctxCopyCoords() {
+  if (ctxLatLng) {
+    navigator.clipboard.writeText(ctxLatLng.lat.toFixed(6) + ', ' + ctxLatLng.lng.toFixed(6));
+    toast('Coordinates copied', 'success');
+  }
+}
+
+function placePin(lat, lng) {
+  pinLat = lat;
+  pinLng = lng;
+  document.getElementById('latInput').value = lat.toFixed(6);
+  document.getElementById('lngInput').value = lng.toFixed(6);
+
+  const hasActive = Object.keys(activeSessions).length > 0;
+  if (pinMarker) {
+    pinMarker.setLatLng([lat, lng]);
+    pinMarker.setIcon(makePinIcon(hasActive));
+  } else {
+    pinMarker = L.marker([lat, lng], { icon: makePinIcon(false), draggable: true }).addTo(map);
+    pinMarker.on('dragend', (e) => {
+      const pos = e.target.getLatLng();
+      placePin(pos.lat, pos.lng);
+    });
+  }
+  updateSetButton();
+}
+
+function goPreset(lat, lng, name) {
+  map.setView([lat, lng], 15);
+  placePin(lat, lng);
+}
+
+['latInput', 'lngInput'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    const lat = parseFloat(document.getElementById('latInput').value);
+    const lng = parseFloat(document.getElementById('lngInput').value);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      map.setView([lat, lng], 14);
+      placePin(lat, lng);
+    }
+  });
+});
+
+function copyCoords() {
+  const lat = document.getElementById('latInput').value;
+  const lng = document.getElementById('lngInput').value;
+  if (lat && lng) {
+    navigator.clipboard.writeText(lat + ', ' + lng);
+    toast('Coordinates copied', 'success');
+  }
+}
+
+let searchTimeout = null;
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { searchResults.classList.remove('visible'); return; }
+  searchTimeout = setTimeout(() => searchPlace(q), 400);
+});
+
+searchInput.addEventListener('blur', () => {
+  setTimeout(() => searchResults.classList.remove('visible'), 200);
+});
+
+async function searchPlace(query) {
+
+  if (!isOnline) {
+    searchResults.innerHTML = '<div class="search-result-item"><div class="name">Offline</div><div class="address">Search unavailable without internet</div></div>';
+    searchResults.classList.add('visible');
+    return;
+  }
+  try {
+    const res = await request(
+      'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=6',
+      { timeout: 5000, retries: 0, allowOffline: false }
+    );
+    const data = await res.json();
+    searchResults.innerHTML = '';
+    if (data.length === 0) {
+      searchResults.innerHTML = '<div class="search-result-item"><div class="name">No results found</div></div>';
+    } else {
+      data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'search-result-item';
+        div.innerHTML = '<div class="name">' + item.display_name.split(',')[0] + '</div><div class="address">' + item.display_name + '</div>';
+        div.addEventListener('click', () => {
+          map.setView([parseFloat(item.lat), parseFloat(item.lon)], 16);
+          placePin(parseFloat(item.lat), parseFloat(item.lon));
+          searchInput.value = item.display_name.split(',')[0];
+          searchResults.classList.remove('visible');
+        });
+        searchResults.appendChild(div);
+      });
+    }
+    searchResults.classList.add('visible');
+  } catch (e) {
+    searchResults.innerHTML = '<div class="search-result-item"><div class="name">Search failed</div><div class="address">Check your internet connection</div></div>';
+    searchResults.classList.add('visible');
+  }
+}
+
+async function refreshDevices(manual) {
+  if (_refreshCooldown && !manual) return;
+  _refreshCooldown = true;
+  setTimeout(() => { _refreshCooldown = false; }, 5000);
+
+  const btn = document.getElementById('refreshBtn');
+  if (btn) btn.classList.add('spinning');
+  try {
+    const res = await apiGet('/api/devices', { timeout: 8000, retries: 1 });
+    const data = await res.json();
+    allDevices = data.devices;
+    renderDevices(allDevices);
+  } catch (e) {
+    console.warn('Device scan error:', e && e.message);
+    if (manual) toast('Failed to scan for devices', 'error');
+  } finally {
+    if (btn) btn.classList.remove('spinning');
+  }
+}
+
+function manualRefreshDevices() {
+  refreshDevices(true);
+}
+
+function renderDevices(devices) {
+  const list = document.getElementById('deviceList');
+  const noDevices = document.getElementById('noDevices');
+
+  if (devices.length === 0) {
+    list.innerHTML = '';
+    if (noDevices) {
+      list.appendChild(noDevices);
+      noDevices.style.display = 'block';
+    }
+    return;
+  }
+
+  if (noDevices) noDevices.style.display = 'none';
+
+  if (devices.length === 1 && selectedDevices.size === 0) {
+    selectedDevices.add(devices[0].udid);
+  }
+
+  list.innerHTML = '';
+
+  devices.forEach(dev => {
+    const card = document.createElement('div');
+    const isSelected = selectedDevices.has(dev.udid);
+    const hasSession = !!dev.session;
+    card.className = 'device-card' + (isSelected ? ' selected' : '') + (hasSession ? ' active-session' : '');
+
+    if (hasSession) activeSessions[dev.udid] = dev.session;
+
+    let sessionHtml = '';
+    if (hasSession) {
+      const s = dev.session;
+      const cFail = s.consecutive_failures || 0;
+      const failClass = cFail === 0 ? 'val' : cFail < 5 ? 'val warn' : 'val err';
+      const connMode = s.connection_mode || 'usb';
+      const connLabel = connMode === 'wifi' ? 'WiFi' : connMode === 'tunnel' ? 'Tunnel' : 'USB';
+      const reconnectBadge = s.reconnecting
+        ? '<span class="reconnecting-badge">Reconnecting' + (connMode === 'wifi' ? ' via WiFi' : '') + '...</span>'
+        : '';
+      sessionHtml = '<div class="device-session-info">'
+        + reconnectBadge
+        + '<div class="session-stat-row"><span>Location</span><span class="val">' + s.lat.toFixed(4) + ', ' + s.lng.toFixed(4) + '</span></div>'
+        + '<div class="session-stat-row"><span>Via</span><span class="val" data-stat="conn-' + dev.udid + '">' + connLabel + '</span></div>'
+        + '<div class="session-stat-row"><span>Pushes</span><span class="val" data-stat="pushes-' + dev.udid + '">' + (s.enforce_count || 0) + '</span></div>'
+        + '<div class="session-stat-row"><span>Failures</span><span class="' + failClass + '" data-stat="failures-' + dev.udid + '">' + (s.enforce_failures || 0) + '</span></div>'
+        + '</div>'
+        + '<div class="device-session-btns">'
+        + '<button class="dev-btn danger" onclick="event.stopPropagation();forceStopDevice(\'' + dev.udid + '\')">Force Stop</button>'
+        + '</div>';
+    }
+
+    const conns = dev.connections || [dev.connection || 'USB'];
+    const connBadges = conns.map(c => {
+      const cls = c === 'WiFi' ? 'badge-conn badge-wifi' : 'badge-conn';
+      return '<span class="device-badge ' + cls + '">' + c + '</span>';
+    }).join('');
+
+    card.innerHTML = '<div class="device-header">'
+      + '<div class="device-icon">&#x1F34E;</div>'
+      + '<div class="device-name">' + dev.name + '</div>'
+      + '</div>'
+      + '<div class="device-meta">'
+      + '<span class="device-badge badge-ios">iOS ' + dev.os_version + '</span>'
+      + connBadges
+      + '</div>'
+      + sessionHtml;
+
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.dev-btn')) return;
+      if (selectedDevices.has(dev.udid)) {
+        selectedDevices.delete(dev.udid);
+      } else {
+        selectedDevices.add(dev.udid);
+      }
+      renderDevices(allDevices);
+      updateSetButton();
+    });
+
+    list.appendChild(card);
+  });
+
+  updateGlobalUI();
+}
+
+function updateSetButton() {
+  const btn = document.getElementById('btnSet');
+  const count = selectedDevices.size;
+  btn.disabled = !(count > 0 && pinLat !== null);
+  if (count > 1) {
+    btn.textContent = 'Set Location on ' + count + ' Devices';
+  } else {
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"/><circle cx="12" cy="9" r="2.5"/></svg> Set Device Location';
+  }
+}
+
+function updateGlobalUI() {
+  const count = Object.keys(activeSessions).length;
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  const stopBtn = document.getElementById('btnStopAll');
+  const overlay = document.getElementById('activePinOverlay');
+  const overlayText = document.getElementById('activePinText');
+
+  const statusBar = document.querySelector('.status-bar');
+  if (count > 0) {
+    dot.classList.add('active');
+    statusBar.classList.add('active');
+    const names = Object.values(activeSessions).map(s => s.device_name || '?');
+    text.textContent = 'Spoofing ' + names.join(', ');
+    stopBtn.classList.remove('hidden');
+    overlay.classList.add('visible');
+    overlayText.textContent = 'Spoofing ' + count + ' device' + (count > 1 ? 's' : '');
+    updatePinIcons();
+
+    Object.entries(activeSessions).forEach(([udid, s]) => {
+      const pushEl = document.querySelector('[data-stat="pushes-' + udid + '"]');
+      if (pushEl) pushEl.textContent = s.enforce_count || 0;
+      const failEl = document.querySelector('[data-stat="failures-' + udid + '"]');
+      if (failEl) failEl.textContent = s.enforce_failures || 0;
+      const connEl = document.querySelector('[data-stat="conn-' + udid + '"]');
+      if (connEl) {
+        const m = s.connection_mode || 'usb';
+        connEl.textContent = m === 'wifi' ? 'WiFi' : m === 'tunnel' ? 'Tunnel' : 'USB';
+      }
+    });
+  } else {
+    dot.classList.remove('active');
+    statusBar.classList.remove('active');
+    text.textContent = 'Ready';
+    stopBtn.classList.add('hidden');
+    overlay.classList.remove('visible');
+    updatePinIcons();
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(() => {
+
+    if (document.hidden) return;
+    refreshDevices(false);
+  }, 15000);
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+
+async function checkTunneld() {
+  try {
+    const res = await apiGet('/api/tunneld/status', { timeout: 5000, retries: 1 });
+    const data = await res.json();
+    const dot = document.getElementById('tunneldDot');
+    const label = document.getElementById('tunneldLabel');
+    const toggleBtn = document.getElementById('tunneldToggle');
+    const launchBtn = document.getElementById('tunneldLaunchBtn');
+
+    if (data.running) {
+      dot.classList.add('active');
+      label.textContent = 'Tunnel: Running';
+      toggleBtn.textContent = 'Stop';
+      launchBtn.style.display = 'none';
+    } else {
+      dot.classList.remove('active');
+      label.textContent = 'Tunnel: Stopped';
+      toggleBtn.textContent = 'Start';
+      launchBtn.style.display = 'inline-block';
+    }
+  } catch (e) {
+    const lbl = document.getElementById('tunneldLabel');
+    if (lbl) lbl.textContent = 'Tunnel: Unknown';
+  }
+}
+
+async function toggleTunneld() {
+  const btn = document.getElementById('tunneldToggle');
+  const isRunning = document.getElementById('tunneldDot').classList.contains('active');
+  btn.textContent = '...';
+
+  try {
+    const endpoint = isRunning ? '/api/tunneld/stop' : '/api/tunneld/start';
+    const res = await apiPost(endpoint, {}, { timeout: 15000 });
+    const data = await res.json();
+
+    if (res.ok) {
+      toast(isRunning ? 'Tunnel stopped' : 'Tunnel started', 'success');
+    } else {
+      if (res.status === 403) {
+        toast('Tunnel needs sudo. Use "Terminal" button.', 'warning');
+      } else {
+        toast(data.detail || data.error || 'Tunnel operation failed', 'error');
+      }
+    }
+  } catch (e) {
+    toast('Tunnel operation failed: ' + (e && e.message || 'timed out'), 'error');
+  }
+  setTimeout(checkTunneld, 1000);
+}
+
+async function launchTunnelTerminal() {
+  try {
+    const res = await apiPost('/api/tunneld/launch-terminal', {}, { timeout: 5000 });
+    const data = await res.json();
+    if (data.success) {
+      toast('Terminal opened - enter your password there', 'success');
+      setTimeout(checkTunneld, 5000);
+    } else {
+      toast(data.error || 'Failed to open terminal', 'error');
+    }
+  } catch (e) { toast('Failed: ' + (e && e.message || 'network'), 'error'); }
+}
+
+const holdSlider = document.getElementById('holdIntervalSlider');
+const holdValue = document.getElementById('holdIntervalValue');
+const reconnectSlider = document.getElementById('reconnectSlider');
+const reconnectValue = document.getElementById('reconnectValue');
+
+holdSlider.addEventListener('input', () => {
+  holdValue.textContent = parseFloat(holdSlider.value).toFixed(1) + 's';
+});
+
+holdSlider.addEventListener('change', () => {
+
+  queueSettingsUpdate({ hold_interval: parseFloat(holdSlider.value) });
+});
+
+reconnectSlider.addEventListener('input', () => {
+  const secs = parseInt(reconnectSlider.value);
+  reconnectValue.textContent = secs >= 60 ? Math.round(secs / 60) + 'm' : secs + 's';
+});
+
+reconnectSlider.addEventListener('change', () => {
+  queueSettingsUpdate({ reconnect_window: parseInt(reconnectSlider.value) });
+});
+
+async function loadSettings() {
+  try {
+    const res = await apiGet('/api/settings', { timeout: 5000, retries: 2 });
+    const data = await res.json();
+    holdSlider.value = data.hold_interval;
+    holdValue.textContent = parseFloat(data.hold_interval).toFixed(1) + 's';
+    if (data.reconnect_window) {
+      reconnectSlider.value = data.reconnect_window;
+      const secs = data.reconnect_window;
+      reconnectValue.textContent = secs >= 60 ? Math.round(secs / 60) + 'm' : secs + 's';
+    }
+  } catch (e) {  }
+}
+
+async function loadSavedLocations() {
+  try {
+    const res = await apiGet('/api/locations', { timeout: 5000, retries: 2 });
+    const data = await res.json();
+    renderSavedLocations(data.locations);
+  } catch (e) {  }
+}
+
+function renderSavedLocations(locations) {
+  const container = document.getElementById('savedLocs');
+  container.innerHTML = '';
+  locations.forEach(loc => {
+    const item = document.createElement('div');
+    item.className = 'saved-loc-item';
+
+    item.innerHTML = '<span class="loc-icon">\u{1F4CD}</span>'
+      + '<span class="loc-name">' + loc.name + '</span>'
+      + '<span class="loc-coords">' + parseFloat(loc.lat).toFixed(3) + ', ' + parseFloat(loc.lng).toFixed(3) + '</span>'
+      + '<span class="delete-loc" data-id="' + loc.id + '">\u00D7</span>';
+
+    item.addEventListener('click', (e) => {
+      if (e.target.classList.contains('delete-loc')) return;
+      goPreset(loc.lat, loc.lng, loc.name);
+    });
+
+    const del = item.querySelector('.delete-loc');
+    if (del) {
+      del.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          await request('/api/locations/' + loc.id, {
+            method: 'DELETE', timeout: 5000, allowOffline: true,
+          });
+          loadSavedLocations();
+        } catch (err) {
+          toast('Delete failed: ' + (err && err.message || 'offline'), 'error');
+        }
+      });
+    }
+
+    container.appendChild(item);
+  });
+}
+
+async function saveCurrentLocation() {
+  const name = document.getElementById('saveLocName').value.trim();
+  if (!name) { toast('Enter a name for this location', 'warning'); return; }
+  if (pinLat === null) { toast('Place a pin on the map first', 'warning'); return; }
+  try {
+    await apiPost('/api/locations', { name, lat: pinLat, lng: pinLng }, { timeout: 6000 });
+    document.getElementById('saveLocName').value = '';
+    loadSavedLocations();
+    toast('Location saved: ' + name, 'success');
+  } catch (e) { toast('Failed to save location', 'error'); }
+}
+
+async function saveLocation(name, lat, lng) {
+  try {
+    await apiPost('/api/locations', { name, lat, lng }, { timeout: 6000 });
+    loadSavedLocations();
+    toast('Location saved: ' + name, 'success');
+  } catch (e) { toast('Failed to save location', 'error'); }
+}
+
+async function loadHistory() {
+  try {
+    const res = await apiGet('/api/history', { timeout: 5000, retries: 1 });
+    const data = await res.json();
+    renderHistory(data.history);
+  } catch (e) {  }
+}
+
+function renderHistory(items) {
+  const list = document.getElementById('historyList');
+  if (!items || items.length === 0) {
+    list.innerHTML = '<div class="history-empty">No history yet</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    const duration = item.duration_seconds ? formatDuration(item.duration_seconds) : 'active';
+    el.innerHTML = '<span class="hist-icon">\u{1F4CD}</span>'
+      + '<div class="hist-body">'
+      + '<div class="hist-coords">' + parseFloat(item.lat).toFixed(4) + ', ' + parseFloat(item.lng).toFixed(4) + '</div>'
+      + '<div class="hist-meta">' + (item.device_name || 'Unknown') + ' \u00B7 ' + formatTime(item.set_at) + ' \u00B7 ' + duration + '</div>'
+      + '</div>';
+    el.addEventListener('click', () => {
+      map.setView([item.lat, item.lng], 14);
+      placePin(item.lat, item.lng);
+    });
+    list.appendChild(el);
+  });
+}
+
+function formatDuration(secs) {
+  if (secs < 60) return Math.round(secs) + 's';
+  if (secs < 3600) return Math.round(secs / 60) + 'm';
+  return (secs / 3600).toFixed(1) + 'h';
+}
+
+function formatTime(isoStr) {
+  if (!isoStr) return '--';
+  try {
+    const d = new Date(isoStr);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (isToday) return 'Today ' + timeStr;
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + timeStr;
+  } catch { return '--'; }
+}
+
+function toggleHistory() {
+  const toggle = document.getElementById('historyToggle');
+  const container = document.getElementById('historyContainer');
+  historyCollapsed = !historyCollapsed;
+  if (historyCollapsed) {
+    toggle.classList.add('collapsed');
+    container.style.display = 'none';
+  } else {
+    toggle.classList.remove('collapsed');
+    container.style.display = 'block';
+  }
+}
+
+async function clearHistory() {
+  try {
+    await request('/api/history', { method: 'DELETE', timeout: 5000, allowOffline: true });
+    renderHistory([]);
+    toast('History cleared', 'success');
+  } catch (e) { toast('Failed to clear history', 'error'); }
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '--';
+  const d = new Date(isoStr);
+  const now = new Date();
+  const secs = Math.floor((now - d) / 1000);
+  if (secs < 5) return 'just now';
+  if (secs < 60) return secs + 's ago';
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+async function setLocation() {
+  if (selectedDevices.size === 0) {
+    toast('Select a device first', 'warning');
+    return;
+  }
+  if (pinLat === null) {
+    toast('Place a pin on the map first', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btnSet');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="animation:spin 0.6s linear infinite;display:inline-block">&#x23F3;</span> Setting...';
+
+  const payload = {
+    lat: pinLat,
+    lng: pinLng,
+    device_udids: [...selectedDevices],
+    connection_mode: 'usb',
+  };
+
+  try {
+
+    const res = await apiPost('/api/set-location', payload, { timeout: 30000, retries: 1 });
+
+    let data;
+    try { data = await res.json(); } catch {
+      throw new Error('Invalid response from server');
+    }
+    if (data.success) {
+      const successes = (data.results || []).filter(r => r.success);
+      const fails = (data.results || []).filter(r => !r.success);
+
+      successes.forEach(r => {
+        activeSessions[r.udid] = {
+          lat: pinLat, lng: pinLng, device_name: r.device_name,
+          enforce_count: 1, enforce_failures: 0, consecutive_failures: 0,
+        };
+      });
+
+      if (successes.length > 0) {
+        toast('Location set on ' + successes.length + ' device' + (successes.length > 1 ? 's' : ''), 'success');
+      }
+      if (fails.length > 0) {
+        fails.forEach(f => toast('Failed: ' + (f.error || f.udid), 'error'));
+      }
+
+      updatePinIcons();
+      updateGlobalUI();
+      loadHistory();
+    } else {
+      const detail = data.detail || (data.results && data.results[0] && data.results[0].error) || 'Failed to set location';
+      toast(detail, 'error');
+    }
+  } catch (e) {
+    const isAbort = e && (e.name === 'AbortError' || /abort/i.test(e.message || ''));
+    toast(isAbort ? 'Set location timed out — try again' : ('Set failed: ' + (e && e.message || 'unknown')), 'error');
+  } finally {
+    btn.disabled = false;
+    updateSetButton();
+  }
+}
+
+async function stopAll() {
+  try {
+    const res = await apiPost('/api/force-stop', {}, { timeout: 15000, retries: 1 });
+    const data = await res.json();
+    if (data.success) {
+      activeSessions = {};
+      updateGlobalUI();
+      toast('All sessions stopped, GPS restored', 'success');
+      loadHistory();
+    }
+  } catch (e) {
+    toast('Stop failed: ' + (e && e.message || 'network'), 'error');
+  }
+}
+
+async function forceStopDevice(udid) {
+  try {
+    const res = await apiPost('/api/force-stop', { device_udid: udid }, { timeout: 15000, retries: 1 });
+    const data = await res.json();
+    if (data.success) {
+      delete activeSessions[udid];
+      updateGlobalUI();
+      toast('Session stopped', 'success');
+      loadHistory();
+    }
+  } catch (e) { toast('Stop failed: ' + (e && e.message || 'network'), 'error'); }
+}
+
+function wsIsOpen() {
+  return ws && ws.readyState === WebSocket.OPEN;
+}
+
+function setWsIndicator(state) {
+  const el = document.getElementById('wsIndicator');
+  if (!el) return;
+  el.classList.remove('connected', 'stale');
+  if (state === 'connected') {
+    el.classList.add('connected');
+    el.title = 'Live updates connected';
+  } else if (state === 'stale') {
+    el.classList.add('stale');
+    el.title = 'Reconnecting...';
+  } else {
+    el.title = 'Disconnected';
+  }
+}
+
+function connectWS() {
+  if (wsReconnectTimer) { clearTimeout(wsReconnectTimer); wsReconnectTimer = null; }
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
+
+  let socket;
+  try {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    socket = new WebSocket(proto + '://' + location.host + '/ws');
+  } catch (_) {
+    scheduleWsReconnect();
+    return;
+  }
+  ws = socket;
+
+  socket.onopen = () => {
+    wsConnected = true;
+    wsReconnectAttempts = 0;
+    wsLastMessageAt = Date.now();
+    wsServerHeardAt = Date.now();
+    setWsIndicator('connected');
+
+    resyncAfterReconnect();
+  };
+
+  socket.onmessage = (e) => {
+    wsLastMessageAt = Date.now();
+    wsServerHeardAt = Date.now();
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+
+    if (msg.type === 'ping') {
+
+      try { if (wsIsOpen()) ws.send(JSON.stringify({ type: 'pong' })); } catch {}
+      return;
+    }
+
+    if (msg.type === 'status') {
+      activeSessions = {};
+      (msg.sessions || []).forEach(s => { activeSessions[s.udid] = s; });
+      restoreFromSessions();
+      updateGlobalUI();
+    }
+
+    if (msg.type === 'enforcement') {
+      if (msg.udid && msg.active) {
+        activeSessions[msg.udid] = msg;
+      }
+      updateGlobalUI();
+    }
+
+    if (msg.type === 'location_set') {
+
+    }
+
+    if (msg.type === 'location_cleared') {
+      (msg.devices || []).forEach(udid => delete activeSessions[udid]);
+      updateGlobalUI();
+    }
+
+    if (msg.type === 'device_reconnecting') {
+      if (msg.udid && activeSessions[msg.udid]) {
+        activeSessions[msg.udid].reconnecting = true;
+      }
+      updateGlobalUI();
+    }
+
+    if (msg.type === 'device_reconnected') {
+      if (msg.udid && activeSessions[msg.udid]) {
+        activeSessions[msg.udid].reconnecting = false;
+        if (msg.connection_mode) {
+          activeSessions[msg.udid].connection_mode = msg.connection_mode;
+        }
+      }
+      updateGlobalUI();
+      const via = msg.connection_mode === 'wifi' ? ' via WiFi' : '';
+      toast(msg.device_name + ' reconnected' + via + '!', 'success');
+    }
+
+    if (msg.type === 'reconnect_timeout') {
+      delete activeSessions[msg.udid];
+      updateGlobalUI();
+      toast(msg.device_name + ' reconnect timed out', 'warning');
+    }
+  };
+
+  socket.onclose = () => {
+    wsConnected = false;
+    setWsIndicator('stale');
+    scheduleWsReconnect();
+  };
+
+  socket.onerror = () => {
+
+    wsConnected = false;
+    setWsIndicator('stale');
+  };
+}
+
+function scheduleWsReconnect() {
+  if (wsReconnectTimer) return;
+  wsReconnectAttempts++;
+
+  const base = Math.min(20000, 800 * Math.pow(1.8, Math.min(wsReconnectAttempts, 8)));
+  const delay = base + Math.random() * 600;
+  wsReconnectTimer = setTimeout(() => {
+    wsReconnectTimer = null;
+    connectWS();
+  }, delay);
+}
+
+function forceWsReconnect(reason) {
+  if (wsReconnectTimer) { clearTimeout(wsReconnectTimer); wsReconnectTimer = null; }
+  if (ws) {
+    try { ws.onclose = null; ws.onerror = null; ws.close(); } catch {}
+  }
+  ws = null;
+  wsConnected = false;
+  wsReconnectAttempts = 0;
+  setWsIndicator('stale');
+  if (reason) console.log('WS force reconnect:', reason);
+  connectWS();
+}
+
+function wsSilenceMs() {
+  if (!wsIsOpen()) return Infinity;
+  return Date.now() - (wsServerHeardAt || 0);
+}
+
+setInterval(() => {
+  if (!wsIsOpen()) return;
+  if (wsSilenceMs() > 25000) {
+    forceWsReconnect('server silent > 25s');
+  }
+}, 5000);
+
+let _resyncInFlight = false;
+let _resyncPending = false;
+async function resyncAfterReconnect() {
+
+  if (_resyncInFlight) { _resyncPending = true; return; }
+  _resyncInFlight = true;
+  try {
+    await Promise.all([
+      refreshDevices(false),
+      (async () => {
+        try {
+          const res = await apiGet('/api/status', { timeout: 6000, retries: 1 });
+          if (!res.ok) return;
+          const data = await res.json();
+          activeSessions = {};
+          (data.sessions || []).forEach(s => { activeSessions[s.udid] = s; });
+          updateGlobalUI();
+        } catch {}
+      })(),
+      checkTunneld(),
+      flushPendingSettings(),
+    ]);
+  } catch {} finally {
+    _resyncInFlight = false;
+    if (_resyncPending) {
+      _resyncPending = false;
+      setTimeout(resyncAfterReconnect, 500);
+    }
+  }
+}
+
+function onWake(reason) {
+  _lastWakeTick = Date.now();
+
+  if (onWake._lastFire && Date.now() - onWake._lastFire < 2000) return;
+  onWake._lastFire = Date.now();
+  forceWsReconnect(reason || 'wake');
+  setTimeout(resyncAfterReconnect, 500);
+}
+onWake._lastFire = 0;
+
+setInterval(() => {
+  const now = Date.now();
+  const delta = now - _lastWakeTick;
+  _lastWakeTick = now;
+  if (delta > 5000) {
+
+    onWake('timer drift ' + delta + 'ms');
+  }
+}, 1000);
+
+function setOnlineStatus(online) {
+  const changed = online !== isOnline;
+  isOnline = online;
+  const indicator = document.getElementById('wsIndicator');
+  if (indicator) indicator.dataset.online = online ? '1' : '0';
+  const overlay = document.getElementById('offlineOverlay');
+  if (overlay) overlay.classList.toggle('visible', !online);
+  if (changed) {
+    if (online) {
+      if (_offlineToastShown) toast('Back online', 'success');
+      _offlineToastShown = false;
+      setTimeout(() => onWake('navigator.onLine -> true'), 300);
+    } else {
+      _offlineToastShown = true;
+      toast('Offline — actions will resume when connection returns', 'warning');
+      setWsIndicator('stale');
+    }
+  }
+}
+
+window.addEventListener('online', () => setOnlineStatus(true));
+window.addEventListener('offline', () => setOnlineStatus(false));
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) onWake('bfcache restore');
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+
+    if (!wsIsOpen() || wsSilenceMs() > 15000) {
+      onWake('visibilitychange visible');
+    } else {
+
+      try { ws.send(JSON.stringify({ type: 'resync' })); } catch {}
+    }
+  }
+});
+window.addEventListener('focus', () => {
+  if (!wsIsOpen()) onWake('focus');
+});
+
+function queueSettingsUpdate(partial) {
+  try {
+    const pending = JSON.parse(localStorage.getItem('locationplus-settings-pending') || '{}');
+    Object.assign(pending, partial);
+    localStorage.setItem('locationplus-settings-pending', JSON.stringify(pending));
+  } catch {}
+  flushPendingSettings();
+}
+
+async function flushPendingSettings() {
+  let pending;
+  try {
+    pending = JSON.parse(localStorage.getItem('locationplus-settings-pending') || '{}');
+  } catch { return; }
+  if (!pending || Object.keys(pending).length === 0) return;
+  try {
+    const res = await apiPost('/api/settings', pending, { timeout: 5000 });
+    if (res && res.ok) {
+      localStorage.removeItem('locationplus-settings-pending');
+    }
+  } catch {
+
+  }
+}
+
+function restoreFromSessions() {
+  const sessionList = Object.values(activeSessions);
+  if (sessionList.length === 0) return;
+
+  sessionList.forEach(s => {
+    selectedDevices.add(s.udid);
+  });
+
+  const first = sessionList[0];
+  if (first.lat && first.lng && pinLat === null) {
+    map.setView([first.lat, first.lng], 14);
+    placePin(first.lat, first.lng);
+  }
+  updateSetButton();
+}
+
+function generateTileUrls(minLat, maxLat, minLng, maxLng, minZoom, maxZoom) {
+  const urls = [];
+  const subs = ['a', 'b', 'c', 'd'];
+  const style = getTheme() === 'light' ? 'light_all' : 'dark_all';
+  for (let z = minZoom; z <= maxZoom; z++) {
+    const x1 = lonToTile(minLng, z);
+    const x2 = lonToTile(maxLng, z);
+    const y1 = latToTile(maxLat, z);
+    const y2 = latToTile(minLat, z);
+    for (let x = x1; x <= x2; x++) {
+      for (let y = y1; y <= y2; y++) {
+        const s = subs[(x + y) % subs.length];
+        urls.push('https://' + s + '.basemaps.cartocdn.com/' + style + '/' + z + '/' + x + '/' + y + '.png');
+      }
+    }
+  }
+  return urls;
+}
+
+function lonToTile(lon, zoom) { return Math.floor((lon + 180) / 360 * Math.pow(2, zoom)); }
+function latToTile(lat, zoom) {
+  return Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+}
+
+async function autoDownloadTiles() {
+  if (!swReady) return;
+  await swReady;
+
+  const sw = navigator.serviceWorker.controller;
+  if (!sw) return;
+
+  const cacheCheck = await new Promise(resolve => {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = (e) => resolve(e.data);
+    sw.postMessage({ type: 'CACHE_COUNT' }, [ch.port2]);
+    setTimeout(() => resolve({ count: -1 }), 3000);
+  });
+
+  if (cacheCheck.count > 500) return;
+
+  const nycUrls = generateTileUrls(40.48, 40.92, -74.27, -73.68, 10, 14);
+  const brooklynUrls = generateTileUrls(40.57, 40.71, -74.04, -73.87, 15, 16);
+  const uesUrls = generateTileUrls(40.762, 40.785, -73.968, -73.943, 15, 16);
+  const allUrls = [...nycUrls, ...brooklynUrls, ...uesUrls];
+
+  toast('Caching offline maps...', 'success');
+
+  sw.postMessage({ type: 'CACHE_TILES', urls: allUrls, batchId: 'auto' });
+
+  const handler = (event) => {
+    if (event.data.type === 'CACHE_TILES_DONE' && event.data.batchId === 'auto') {
+      navigator.serviceWorker.removeEventListener('message', handler);
+      toast('Offline maps ready (' + event.data.cached + ' tiles)', 'success');
+    }
+  };
+  navigator.serviceWorker.addEventListener('message', handler);
+}
+
+async function checkPreviousSession() {
+  try {
+    const res = await apiGet('/api/previous-session', { timeout: 5000, retries: 2 });
+    const data = await res.json();
+    if (data.has_previous && data.sessions) {
+      const entries = Object.values(data.sessions);
+      if (entries.length === 0) return;
+
+      if (data.is_live) {
+        entries.forEach(s => {
+          activeSessions[s.udid] = s;
+          selectedDevices.add(s.udid);
+        });
+        const first = entries[0];
+        map.setView([first.lat, first.lng], 14);
+        placePin(first.lat, first.lng);
+        updateGlobalUI();
+        updateSetButton();
+        refreshDevices(false);
+        return;
+      }
+
+      _previousSessionData = entries;
+      const first = entries[0];
+      const banner = document.getElementById('resumeBanner');
+      if (entries.length === 1) {
+        document.getElementById('resumeText').textContent =
+          'Resume: ' + parseFloat(first.lat).toFixed(4) + ', ' + parseFloat(first.lng).toFixed(4) + ' on ' + (first.device_name || 'device');
+      } else {
+        document.getElementById('resumeText').textContent =
+          'Resume session on ' + entries.length + ' devices';
+      }
+      banner.classList.add('visible');
+      map.setView([first.lat, first.lng], 14);
+      placePin(first.lat, first.lng);
+    }
+  } catch (e) {  }
+}
+
+async function resumeSession() {
+  document.getElementById('resumeBanner').classList.remove('visible');
+  if (!_previousSessionData) return;
+
+  for (const entry of _previousSessionData) {
+    selectedDevices.add(entry.udid);
+    placePin(entry.lat, entry.lng);
+    map.setView([entry.lat, entry.lng], 14);
+  }
+
+  updateSetButton();
+  await setLocation();
+  _previousSessionData = null;
+}
+
+function dismissResume() {
+  document.getElementById('resumeBanner').classList.remove('visible');
+  _previousSessionData = null;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'Enter') { setLocation(); e.preventDefault(); }
+  if (e.key === 'Escape') { stopAll(); e.preventDefault(); }
+});
+
+function toast(message, type) {
+  type = type || 'success';
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+(async function init() {
+
+  setOnlineStatus(isOnline);
+
+  try {
+    const res = await apiGet('/api/health', { timeout: 5000, retries: 1 });
+    const h = await res.json();
+    if (!h.pymobiledevice3) {
+      toast('pymobiledevice3 not found', 'error');
+    }
+  } catch (e) {
+    toast('Backend not responding', 'error');
+  }
+
+  refreshDevices(false);
+  connectWS();
+  checkTunneld();
+  loadSettings();
+  loadSavedLocations();
+  loadHistory();
+  checkPreviousSession();
+  startAutoRefresh();
+
+  setInterval(() => {
+
+    if (!wsIsOpen()) checkTunneld();
+  }, 15000);
+
+  setInterval(async () => {
+    if (Object.keys(activeSessions).length === 0) return;
+    if (wsIsOpen() && wsSilenceMs() < 10000) return;
+    try {
+      const res = await apiGet('/api/status', { timeout: 5000, retries: 0 });
+      const data = await res.json();
+      activeSessions = {};
+      (data.sessions || []).forEach(s => { activeSessions[s.udid] = s; });
+      updateGlobalUI();
+    } catch (e) {  }
+  }, 5000);
+
+  setInterval(() => { flushPendingSettings(); }, 10000);
+
+  setTimeout(autoDownloadTiles, 3000);
+
+  window.addEventListener('unhandledrejection', (e) => {
+    if (e.reason && (e.reason.name === 'AbortError' || /network|fetch|timeout/i.test(e.reason.message || ''))) {
+      e.preventDefault();
+    }
+  });
+})();
+</script>
+</body>
+</html>
