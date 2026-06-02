@@ -1066,6 +1066,7 @@ async def set_location(req: SetLocationRequest):
             results.append({"udid": udid, "success": False, "error": "Failed to start location process"})
             continue
 
+        method = "cli_tunnel" if use_tunnel else "cli_usb"
         now = datetime.now(timezone.utc)
         session = DeviceSession(
             udid=udid,
@@ -1106,7 +1107,6 @@ async def set_location(req: SetLocationRequest):
             sessions[udid] = session
 
         _save_state()
-        method = "cli_tunnel" if use_tunnel else "cli_usb"
         results.append({
             "udid": udid,
             "success": True,
